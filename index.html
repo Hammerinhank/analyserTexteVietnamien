@@ -35,6 +35,7 @@
         .btn-chatgpt      { background: #10a37f; color: white; }
         .btn-html         { background: #2c7be5; color: white; }
         .btn-copy-preview { background: #607d8b; color: white; font-size: 0.8em; padding: 4px 10px; }
+        .btn-secret       { background: #16a085; color: white; }
 
         .orange-link { color: orange !important; text-decoration: underline !important; }
         .sym-input   { width: 40px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; }
@@ -120,6 +121,38 @@
             z-index: 99999;
             min-width: 260px;
         }
+
+        /* ─── PANNEAU IDENTIFIANTS (SECRETS) ──────────────────────── */
+        #secretsOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+        }
+        #secretsPanel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        #secretsPanel h3 { margin-top: 0; }
+        #secretsPanel .field { margin-bottom: 14px; }
+        #secretsPanel label { display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 4px; color: #2c3e50; }
+        #secretsPanel input[type="text"], #secretsPanel input[type="password"] {
+            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; box-sizing: border-box;
+        }
+        #secretsPanel .note { font-size: 0.78em; color: #777; margin-top: 15px; line-height: 1.4; }
+        #secretsPanel .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        #secretsStatus { font-size: 0.8em; margin-bottom: 12px; padding: 8px 10px; border-radius: 6px; }
+        #secretsStatus.ok   { background: #eafaf1; color: #1e8449; }
+        #secretsStatus.warn { background: #fef5e7; color: #b9770e; }
     </style>
 </head>
 <body>
@@ -136,6 +169,7 @@
     <div class="separator"></div>
 
     <button onclick="diagHTML()" style="background:#e74c3c; color:white;">🔍 Diag HTML</button>
+    <button class="btn-secret" onclick="openSecretsPanel()" data-tooltip="Enregistre tes tokens GitHub localement dans ce navigateur (jamais dans le code)">🔒 Identifiants</button>
 
     <label style="font-size:0.85em; cursor:pointer;">
         <input type="checkbox" id="toggleNames" onchange="toggleLabels(this.checked)"> Afficher les noms
@@ -230,14 +264,155 @@
     <div id="bilanContent"></div>
 </div>
 
-<script>
-    // ─── CONSTANTES GITHUB ────────────────────────────────────────────
-    const REPO_API_URL = "https://api.github.com/repos/Hammerinhank/SauvegardeOutilMemoEtDelimiteurs/contents/Sauvegarde.txt";
-    const GIT_TOKEN    = "undefined";
+<!-- ─── PANNEAU IDENTIFIANTS (stockés uniquement en localStorage, jamais dans le code) ─── -->
+<div id="secretsOverlay">
+    <div id="secretsPanel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>🔒 Identifiants GitHub</h3>
+            <span onclick="closeSecretsPanel()" style="cursor:pointer; font-size:1.3em; line-height:1;">✕</span>
+        </div>
+        <div id="secretsStatus"></div>
 
-    const GIST_ID   = "undefined";
-    const GIST_FILE = "extraction.txt";
-    const GIST_TOKEN = "undefined";
+        <div class="field">
+            <label>URL de l'API du fichier de sauvegarde (Test Save / Test Load)</label>
+            <input type="text" id="inRepoApiUrl" placeholder="https://api.github.com/repos/utilisateur/depot/contents/Sauvegarde.txt">
+        </div>
+        <div class="field">
+            <label>Token GitHub (dépôt — Test Save / Test Load)</label>
+            <input type="password" id="inGitToken" placeholder="ghp_...">
+        </div>
+        <div class="field">
+            <label>ID du Gist (Sauvegarder / Charger depuis Gist)</label>
+            <input type="text" id="inGistId" placeholder="68488063edf6c4f8a14c26a08f479129">
+        </div>
+        <div class="field">
+            <label>Nom du fichier dans le Gist</label>
+            <input type="text" id="inGistFile" placeholder="extraction.txt">
+        </div>
+        <div class="field">
+            <label>Token GitHub (Gist)</label>
+            <input type="password" id="inGistToken" placeholder="ghp_...">
+        </div>
+
+        <div class="actions">
+            <button class="btn-clear" onclick="clearSecrets()">🗑️ Effacer</button>
+            <button class="btn-sync" onclick="closeSecretsPanel()">Annuler</button>
+            <button class="btn-download" onclick="saveSecrets()">💾 Enregistrer</button>
+        </div>
+
+        <div class="note">
+            Ces informations sont enregistrées uniquement dans le <b>localStorage</b> de ce navigateur, sur cet appareil — jamais dans le code source de la page, jamais envoyées ailleurs qu'à l'API GitHub. Elles ne sont donc pas incluses quand tu copies ou partages ce fichier HTML. Si tu changes d'appareil ou de navigateur, il faudra les ressaisir ici.
+        </div>
+    </div>
+</div>
+
+<script>
+    // ─── IDENTIFIANTS (localStorage — jamais codés en dur) ─────────────
+    const SECRETS_STORAGE_KEY = "tcah_secrets_v1";
+
+    function loadSecrets() {
+        try {
+            const raw = localStorage.getItem(SECRETS_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            console.error("Erreur de lecture des identifiants :", e);
+            return {};
+        }
+    }
+
+    let secrets = loadSecrets();
+
+    // Ces variables sont dérivées de "secrets" et relues à chaque enregistrement/ouverture du panneau
+    let REPO_API_URL = secrets.repoApiUrl || "";
+    let GIT_TOKEN     = secrets.gitToken   || "";
+    let GIST_ID       = secrets.gistId     || "";
+    let GIST_FILE     = secrets.gistFile   || "extraction.txt";
+    let GIST_TOKEN    = secrets.gistToken  || "";
+
+    function openSecretsPanel() {
+        secrets = loadSecrets();
+        document.getElementById('inRepoApiUrl').value = secrets.repoApiUrl || "";
+        document.getElementById('inGitToken').value    = secrets.gitToken   || "";
+        document.getElementById('inGistId').value      = secrets.gistId     || "";
+        document.getElementById('inGistFile').value    = secrets.gistFile   || "extraction.txt";
+        document.getElementById('inGistToken').value   = secrets.gistToken  || "";
+        refreshSecretsStatus();
+        document.getElementById('secretsOverlay').style.display = 'flex';
+    }
+
+    function closeSecretsPanel() {
+        document.getElementById('secretsOverlay').style.display = 'none';
+    }
+
+    function refreshSecretsStatus() {
+        const statusEl = document.getElementById('secretsStatus');
+        const hasRepo = !!(secrets.repoApiUrl && secrets.gitToken);
+        const hasGist = !!(secrets.gistId && secrets.gistToken);
+        if (hasRepo && hasGist) {
+            statusEl.className = 'ok';
+            statusEl.innerHTML = '✅ Identifiants dépôt et Gist configurés sur cet appareil.';
+        } else {
+            statusEl.className = 'warn';
+            let missing = [];
+            if (!hasRepo) missing.push("dépôt (Test Save/Load)");
+            if (!hasGist) missing.push("Gist");
+            statusEl.innerHTML = '⚠️ Non configuré : ' + missing.join(' et ') + '.';
+        }
+    }
+
+    function saveSecrets() {
+        secrets = {
+            repoApiUrl: document.getElementById('inRepoApiUrl').value.trim(),
+            gitToken:   document.getElementById('inGitToken').value.trim(),
+            gistId:     document.getElementById('inGistId').value.trim(),
+            gistFile:   document.getElementById('inGistFile').value.trim() || "extraction.txt",
+            gistToken:  document.getElementById('inGistToken').value.trim()
+        };
+        localStorage.setItem(SECRETS_STORAGE_KEY, JSON.stringify(secrets));
+
+        REPO_API_URL = secrets.repoApiUrl;
+        GIT_TOKEN     = secrets.gitToken;
+        GIST_ID       = secrets.gistId;
+        GIST_FILE     = secrets.gistFile;
+        GIST_TOKEN    = secrets.gistToken;
+
+        refreshSecretsStatus();
+        const toast = document.getElementById("toast");
+        toast.textContent = "Identifiants enregistrés localement !";
+        toast.className = "show";
+        setTimeout(() => { toast.className = ""; toast.textContent = "Code source HTML copié !"; }, 2000);
+    }
+
+    function clearSecrets() {
+        if (!confirm("Effacer les identifiants enregistrés sur cet appareil ?")) return;
+        localStorage.removeItem(SECRETS_STORAGE_KEY);
+        secrets = {};
+        REPO_API_URL = ""; GIT_TOKEN = ""; GIST_ID = ""; GIST_FILE = "extraction.txt"; GIST_TOKEN = "";
+        document.getElementById('inRepoApiUrl').value = "";
+        document.getElementById('inGitToken').value    = "";
+        document.getElementById('inGistId').value      = "";
+        document.getElementById('inGistFile').value    = "extraction.txt";
+        document.getElementById('inGistToken').value   = "";
+        refreshSecretsStatus();
+    }
+
+    function ensureRepoCredentials() {
+        if (!REPO_API_URL || !GIT_TOKEN) {
+            alert("Configure d'abord l'URL de l'API et le token GitHub du dépôt (bouton 🔒 Identifiants).");
+            openSecretsPanel();
+            return false;
+        }
+        return true;
+    }
+
+    function ensureGistCredentials() {
+        if (!GIST_ID || !GIST_TOKEN) {
+            alert("Configure d'abord l'ID du Gist et son token GitHub (bouton 🔒 Identifiants).");
+            openSecretsPanel();
+            return false;
+        }
+        return true;
+    }
 
     // ─── RÉFÉRENCES DOM ───────────────────────────────────────────────
     const inputArea     = document.getElementById('inputArea');
@@ -928,6 +1103,7 @@ ${text}`;
 
     // ─── GITHUB : SAVE & LOAD ─────────────────────────────────────────
     async function saveToGit(textToSave) {
+        if (!ensureRepoCredentials()) return;
         const btn      = document.getElementById('btnTestSave');
         const origText = btn.innerHTML;
         btn.innerHTML  = "⏳ Sauvegarde...";
@@ -955,6 +1131,10 @@ ${text}`;
     }
 
     async function loadFromGit(autoSync = false) {
+        if (!REPO_API_URL || !GIT_TOKEN) {
+            if (!autoSync) ensureRepoCredentials();
+            return;
+        }
         const btn      = document.getElementById('btnTestLoad');
         const origText = btn.innerHTML;
         btn.innerHTML  = "⏳ Chargement...";
@@ -989,12 +1169,14 @@ ${text}`;
     }
 
     function saveToGitDebounced(text) {
+        if (!REPO_API_URL || !GIT_TOKEN) return; // pas d'identifiants configurés : pas de sauvegarde auto silencieuse
         clearTimeout(saveDebounceTimer);
         saveDebounceTimer = setTimeout(() => saveToGit(text), 1500);
     }
 
     // ─── GITHUB GIST : SAVE & LOAD ────────────────────────────────────
     async function saveToGist() {
+        if (!ensureGistCredentials()) return;
         const btn = document.querySelector('[onclick="saveToGist()"]');
         const newContent = document.getElementById('extractionOutput').innerText;
         if (!newContent.trim()) return alert("La fenêtre d'extraction est vide !");
@@ -1034,6 +1216,7 @@ ${text}`;
     }
 
     async function loadFromGist() {
+        if (!ensureGistCredentials()) return;
         const btn      = document.querySelector('[onclick="loadFromGist()"]');
         const origText = btn.innerHTML;
         btn.innerHTML  = "⏳ Chargement en cours...";
@@ -1125,7 +1308,9 @@ ${text}`;
     // ─── INITIALISATION ───────────────────────────────────────────────
     refreshAllCounts();
     document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => loadFromGit(true), 500);
+        if (REPO_API_URL && GIT_TOKEN) {
+            setTimeout(() => loadFromGit(true), 500);
+        }
     });
 
     function toggleLabels(visible) {
