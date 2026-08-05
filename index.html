@@ -10,6 +10,8 @@
         .box        { flex: 1; display: flex; flex-direction: column; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 
         .toolbar    { max-width: 1400px; margin: 0 auto 10px auto; background: white; padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; }
+        .toolbar-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .toolbar-group-label { font-size: 0.72em; font-weight: bold; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
         .filter-bar { max-width: 1400px; margin: 0 auto 15px auto; background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px dashed #ccc; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; min-height: 40px; }
         .filter-item { display: flex; align-items: center; gap: 6px; background: #f8f9fa; padding: 4px 10px; border-radius: 20px; border: 1px solid #ddd; font-size: 0.85em; cursor: pointer; }
         .color-dot  { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
@@ -36,6 +38,7 @@
         .btn-html         { background: #2c7be5; color: white; }
         .btn-copy-preview { background: #607d8b; color: white; font-size: 0.8em; padding: 4px 10px; }
         .btn-secret       { background: #16a085; color: white; }
+        .btn-diag         { background: #e74c3c; color: white; }
 
         .orange-link { color: orange !important; text-decoration: underline !important; }
         .sym-input   { width: 40px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; }
@@ -160,35 +163,52 @@
 <h2 style="text-align:center">Transformateur Couleur V11 + Analyseur HTML V13</h2>
 
 <div class="toolbar">
-    <div>
+    <div class="toolbar-group" data-tooltip="Délimiteurs utilisés autour des mots colorés">
         <label>Début : </label>
         <input type="text" id="symStart" class="sym-input" value="[[">
         <label> Fin : </label>
         <input type="text" id="symEnd" class="sym-input" value="]]">
     </div>
-    <div class="separator"></div>
-
-    <button onclick="diagHTML()" style="background:#e74c3c; color:white;">🔍 Diag HTML</button>
-    <button class="btn-secret" onclick="openSecretsPanel()" data-tooltip="Enregistre tes tokens GitHub localement dans ce navigateur (jamais dans le code)">🔒 Identifiants</button>
-
-    <label style="font-size:0.85em; cursor:pointer;">
-        <input type="checkbox" id="toggleNames" onchange="toggleLabels(this.checked)"> Afficher les noms
-    </label>
-    <label style="font-size:0.85em; cursor:pointer; margin-left:15px; color:#f39c12; font-weight:bold;">
-        <input type="checkbox" id="enableAutoColor"> 🟠 Coloration par Double-Clic
-    </label>
-
-    <button class="btn-download" onclick="downloadTxt()" data-tooltip="Enregistre ton travail en fichier .txt">📥 Télécharger .txt</button>
-    <button class="btn-chatgpt" onclick="sendToChatGPT()" data-tooltip="Crée une histoire avec tes mots orange sur ChatGPT">🚀 Histoire Vietnamienne (ChatGPT)</button>
-    <button class="btn-chatgpt" onclick="improveTranslation()" style="background:#673ab7;" data-tooltip="Optimise la liste et regroupe par sens via l'IA">✨ Améliorer Traductions</button>
-    <button class="btn-chatgpt" onclick="lancerExtractionCouleurs()" style="background:#e67e22;" data-tooltip="Extrait tous les mots colorés par groupe de couleur">🎨 Extraire par Couleur</button>
 
     <div class="separator"></div>
-    <select id="aiChoice" style="padding:5px; border-radius:4px; border:1px solid #ccc; margin-right:10px;">
-        <option value="chatgpt">ChatGPT</option>
-        <option value="claude">Claude</option>
-    </select>
-    <button class="btn-html" onclick="copyRawHtmlSource()" data-tooltip="Copie le code pour créer une page web interactive">📋 Copier le CODE SOURCE HTML</button>
+
+    <div class="toolbar-group">
+        <label style="font-size:0.85em; cursor:pointer;">
+            <input type="checkbox" id="toggleNames" onchange="toggleLabels(this.checked)"> Afficher les noms
+        </label>
+        <label style="font-size:0.85em; cursor:pointer; color:#f39c12; font-weight:bold;">
+            <input type="checkbox" id="enableAutoColor"> 🟠 Coloration par Double-Clic
+        </label>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ─── Étapes 1→4 : préparer le texte source et lancer l'IA ─────── -->
+    <div class="toolbar-group">
+        <button class="btn-chatgpt" onclick="lancerExtractionCouleurs()" style="background:#e67e22;" data-tooltip="① Extrait tous les mots colorés par groupe de couleur">🎨 Extraire par Couleur</button>
+        <button class="btn-chatgpt" onclick="improveTranslation()" style="background:#673ab7;" data-tooltip="② Optimise la liste et regroupe par sens via l'IA">✨ Améliorer Traductions</button>
+        <button class="btn-chatgpt" onclick="sendToChatGPT()" data-tooltip="③ Crée une histoire avec tes mots orange sur ChatGPT">🚀 Histoire Vietnamienne (ChatGPT)</button>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ─── Étape finale : export du résultat ─────────────────────────── -->
+    <div class="toolbar-group">
+        <select id="aiChoice" style="padding:5px; border-radius:4px; border:1px solid #ccc;">
+            <option value="chatgpt">ChatGPT</option>
+            <option value="claude">Claude</option>
+        </select>
+        <button class="btn-html" onclick="copyRawHtmlSource()" data-tooltip="④ Copie le code pour créer une page web interactive">📋 Copier le CODE SOURCE HTML</button>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ─── Outils secondaires : export brut, debug, identifiants ────── -->
+    <div class="toolbar-group">
+        <button class="btn-download" onclick="downloadTxt()" data-tooltip="Enregistre ton travail en fichier .txt">📥 Télécharger .txt</button>
+        <button class="btn-diag" onclick="diagHTML()">🔍 Diag HTML</button>
+        <button class="btn-secret" onclick="openSecretsPanel()" data-tooltip="Enregistre tes tokens GitHub localement dans ce navigateur (jamais dans le code)">🔒 Identifiants</button>
+    </div>
 </div>
 
 <div class="filter-bar" id="filterBar">
