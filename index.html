@@ -183,22 +183,28 @@
 
     <div class="separator"></div>
 
-    <!-- ─── Étapes 1→4 : préparer le texte source et lancer l'IA ─────── -->
+    <!-- ─── Étapes 1→2 : préparer le texte source ─────────────────────── -->
     <div class="toolbar-group">
         <button class="btn-chatgpt" onclick="lancerExtractionCouleurs()" style="background:#e67e22;" data-tooltip="① Extrait tous les mots colorés par groupe de couleur">🎨 Extraire par Couleur</button>
         <button class="btn-chatgpt" onclick="improveTranslation()" style="background:#673ab7;" data-tooltip="② Optimise la liste et regroupe par sens via l'IA">✨ Améliorer Traductions</button>
-        <button class="btn-chatgpt" onclick="sendToChatGPT()" data-tooltip="③ Crée une histoire avec tes mots orange sur ChatGPT">🚀 Histoire Vietnamienne (ChatGPT)</button>
     </div>
 
     <div class="separator"></div>
 
-    <!-- ─── Étape finale : export du résultat ─────────────────────────── -->
+    <!-- ─── Étape 3 : export du code source ────────────────────────────── -->
+    <div class="toolbar-group">
+        <button class="btn-html" onclick="copyRawHtmlSource()" data-tooltip="③ Copie le code pour créer une page web interactive">📋 Copier le CODE SOURCE HTML</button>
+    </div>
+
+    <div style="flex-basis:100%; height:0;"></div>
+
+    <!-- ─── Étape 4 : générer l'histoire vietnamienne ──────────────────── -->
     <div class="toolbar-group">
         <select id="aiChoice" style="padding:5px; border-radius:4px; border:1px solid #ccc;">
             <option value="chatgpt">ChatGPT</option>
             <option value="claude">Claude</option>
         </select>
-        <button class="btn-html" onclick="copyRawHtmlSource()" data-tooltip="④ Copie le code pour créer une page web interactive">📋 Copier le CODE SOURCE HTML</button>
+        <button class="btn-chatgpt" onclick="sendToChatGPT()" data-tooltip="④ Crée une histoire avec tes mots orange sur ChatGPT">🚀 Histoire Vietnamienne (ChatGPT)</button>
     </div>
 
     <div class="separator"></div>
