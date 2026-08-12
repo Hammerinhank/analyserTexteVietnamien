@@ -630,6 +630,7 @@
             <div class="button-group">
                 <button class="btn-clear" data-tooltip="Efface le code HTML ainsi que l'aperçu de la zone 4." onclick="clearFormatZone3()">Vider</button>
                 <button class="btn-paste" data-tooltip="Colle du code HTML du presse-papier ici et met à jour l'aperçu ci-dessous." onclick="pasteToFormatZone3()">Coller</button>
+                <button class="btn-chatgpt" data-tooltip="2e passe : transforme chaque expression orange (avant les « : ») en lien vers ChatGPT. La requête envoyée est le texte du Modèle (zone 1 / combobox du haut) suivi de l'expression cliquée." onclick="ajouterHyperliensFormat()">🔗 Ajouter Hyperliens ChatGPT</button>
                 <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('sectionFormat3')">Plein écran</button>
                 <button data-tooltip="Copie le code HTML brut de cette zone dans le presse-papier." onclick="copyFormatZone3Source()">Copier le code HTML</button>
             </div>
@@ -658,7 +659,7 @@
     <div id="toast" class="toast">Action effectuée avec succès !</div>
 
     <script>
-        const VERSION = "V10";
+        const VERSION = "V11";
         document.getElementById('versionBadge').textContent = VERSION;
 
         const customSelect = document.getElementById('customSelect');
@@ -1183,6 +1184,63 @@
             appData.formatZone4 = newHTML;
             scheduleSync();
             showToast("Texte aéré et mis en forme → zones 3 et 4 !");
+        }
+
+        // Repris de isElementOrange() du Transformateur Couleur : détecte les
+        // spans orange générés par aererSectionsFormat() (à ne pas confondre
+        // avec les titres en gras).
+        function isFormatSpanOrange(el) {
+            if (!el.style || !el.style.color) return false;
+            const match = el.style.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
+            if (!match) return false;
+            const r = parseInt(match[1]), g = parseInt(match[2]), b = parseInt(match[3]);
+            return r > 200 && g > 100 && g < 190;
+        }
+
+        // 2e passe de transformation : transforme chaque expression orange
+        // (avant les ":") en hyperlien vers ChatGPT. La requête envoyée est le
+        // texte du Modèle (zone 1, piloté par la combobox du haut) suivi de
+        // l'expression sur laquelle porte le lien.
+        function ajouterHyperliensFormat() {
+            if (!formatZone3.value.trim()) {
+                showToast("La zone 3 (Résultat) est vide — lancez d'abord « Aérer Sections ».");
+                return;
+            }
+
+            const temp = document.createElement('div');
+            temp.innerHTML = formatZone3.value;
+
+            const modele = formatZone1.value.trim();
+            let count = 0;
+
+            temp.querySelectorAll('span').forEach(span => {
+                if (!isFormatSpanOrange(span)) return;
+                const text = span.textContent.trim();
+                if (text.length === 0) return;
+
+                const question = modele ? `${modele} ${text}` : text;
+                const link = document.createElement('a');
+                link.href = 'https://chatgpt.com/?q=' + encodeURIComponent(question);
+                link.target = '_blank';
+                link.style.color = span.style.color;
+                link.style.textDecoration = 'underline';
+                link.textContent = span.textContent;
+                span.parentNode.replaceChild(link, span);
+                count++;
+            });
+
+            if (count === 0) {
+                showToast("Aucune expression orange trouvée dans le Résultat (zone 3).");
+                return;
+            }
+
+            const newHTML = temp.innerHTML;
+            formatZone3.value = newHTML;
+            formatZone4.innerHTML = newHTML;
+            appData.formatZone3 = newHTML;
+            appData.formatZone4 = newHTML;
+            scheduleSync();
+            showToast(`${count} hyperlien(s) ajouté(s) vers ChatGPT !`);
         }
 
         // Zone 3 (code HTML) <-> Zone 4 (aperçu rendu) : synchronisation
