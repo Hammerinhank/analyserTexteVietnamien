@@ -659,7 +659,7 @@
     <div id="toast" class="toast">Action effectuée avec succès !</div>
 
     <script>
-        const VERSION = "V11";
+        const VERSION = "V12";
         document.getElementById('versionBadge').textContent = VERSION;
 
         const customSelect = document.getElementById('customSelect');
@@ -1161,6 +1161,7 @@
             lines.forEach((rawLine) => {
                 const trimmed = rawLine.trim();
                 if (trimmed.length === 0) return;
+                if (trimmed.startsWith('*')) return; // ligne ignorée
 
                 if (!trimmed.includes(':') && !firstNonEmpty) {
                     newHTML += "<br>"; // ligne vide pour aérer avant une nouvelle section
