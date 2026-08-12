@@ -519,62 +519,6 @@
     <!-- BOUTON D'ENVOI VERS CHATGPT -->
     <button class="btn-chatgpt" data-tooltip="Ouvre ChatGPT dans un nouvel onglet avec les Instructions puis le Contexte pré-remplis dans la requête." onclick="sendToChatGPT()">Envoyer vers ChatGPT</button>
 
-    <!-- ZONE REPLIABLE APRÈS LE BOUTON ENVOYER VERS CHATGPT -->
-    <div class="collapsible-zone">
-        <div class="zone-title-bar" onclick="toggleZone('zoneAfter')">
-            <h2>🛠️ Éditeur & Aperçus HTML</h2>
-            <span class="zone-arrow" id="zoneAfterArrow">▸</span>
-        </div>
-        <div class="zone-content closed" id="zoneAfterContent">
-
-    <!-- FENÊTRE 3 : Éditeur de code HTML -->
-    <div class="section" id="section1">
-        <div class="toolbar" id="tb1">
-            <h2>Source HTML (Éditable)</h2>
-            <div class="button-group">
-                <button class="btn-clear" data-tooltip="Efface le code HTML ainsi que l'aperçu visuel et l'aperçu monochrome qui en dépendent." onclick="clearSourceHTML()">Vider</button>
-                <button class="btn-paste" data-tooltip="Colle le code HTML du presse-papier ici et met à jour automatiquement les deux aperçus ci-dessous." onclick="pasteToSourceHTML()">Coller</button>
-                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section1')">Plein écran</button>
-                <button data-tooltip="Copie le code HTML brut de cette zone dans le presse-papier." onclick="copySourceHTML()">Copier le code HTML</button>
-            </div>
-        </div>
-        <div class="zone-desc">Code HTML brut, modifiable directement. Sert de source : toute modification ici met automatiquement à jour l'Aperçu Visuel et l'Aperçu Monochrome ci-dessous.</div>
-        <textarea id="htmlSource" placeholder="Saisissez ou collez votre code HTML ici..."></textarea>
-    </div>
-
-    <!-- FENÊTRE 4 : Aperçu visuel éditable (WYSIWYG) -->
-    <div class="section" id="section2">
-        <div class="toolbar" id="tb2">
-            <h2>Aperçu Visuel (Éditable)</h2>
-            <div class="button-group">
-                <button class="btn-clear" data-tooltip="Efface l'aperçu visuel ainsi que le code source et l'aperçu monochrome qui lui sont liés." onclick="clearVisualHTML()">Vider</button>
-                <button class="btn-paste" data-tooltip="Colle du texte ou du HTML directement ici, sans toucher à la zone Source HTML au-dessus." onclick="pasteToVisualHTML()">Coller</button>
-                <button class="btn-cleanup" data-tooltip="Envoie le contenu actuel de cet aperçu vers l'Aperçu Monochrome ci-dessous, puis vide la zone Source HTML pour éviter toute confusion sur l'origine du contenu." onclick="processVisualToMonochrome()">Traiter → Aperçu Monochrome</button>
-                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section2')">Plein écran</button>
-                <button data-tooltip="Copie le contenu affiché ici avec sa mise en forme (gras, couleurs, etc.)." onclick="copyRichText()">Copier le texte rendu (Riche)</button>
-            </div>
-        </div>
-        <div class="zone-desc">Rendu visuel éditable du code HTML. Le taper ici met normalement à jour le code source ; utilisez « Coller » puis « Traiter → Aperçu Monochrome » pour un contenu collé indépendamment du code source.</div>
-        <div id="htmlVisual" class="wysiwyg" contenteditable="true"></div>
-    </div>
-
-    <!-- FENÊTRE 5 : Aperçu Monochrome -->
-    <div class="section" id="section3">
-        <div class="toolbar" id="tb3">
-            <h2>Aperçu Monochrome (Texte coloré entre doubles crochets)</h2>
-            <div class="button-group">
-                <button class="btn-clear" data-tooltip="Efface l'aperçu monochrome ainsi que le code source et l'aperçu visuel qui lui sont liés." onclick="clearProcessedHTML()">Vider</button>
-                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section3')">Plein écran</button>
-                <button data-tooltip="Copie le texte affiché ici (mise en forme neutralisée), avec le texte auparavant coloré entre doubles crochets [[ ]]." onclick="copyProcessedRichText()">Copier le texte rendu (Riche)</button>
-            </div>
-        </div>
-        <div class="zone-desc">Même contenu affiché en noir uniforme, sans gras ni italique. Le texte qui était en couleur dans la source apparaît entouré de doubles crochets [[ ]] pour rester repérable.</div>
-        <div id="htmlProcessed" class="wysiwyg wysiwyg-monochrome" contenteditable="true"></div>
-    </div>
-
-        </div>
-    </div>
-
     <!-- ZONE REPLIABLE : MISE EN FORME -->
     <div class="collapsible-zone">
         <div class="zone-title-bar" onclick="toggleZone('zoneFormat')">
@@ -656,10 +600,66 @@
         </div>
     </div>
 
+    <!-- ZONE REPLIABLE APRÈS LE BOUTON ENVOYER VERS CHATGPT -->
+    <div class="collapsible-zone">
+        <div class="zone-title-bar" onclick="toggleZone('zoneAfter')">
+            <h2>🛠️ Éditeur & Aperçus HTML</h2>
+            <span class="zone-arrow" id="zoneAfterArrow">▸</span>
+        </div>
+        <div class="zone-content closed" id="zoneAfterContent">
+
+    <!-- FENÊTRE 3 : Éditeur de code HTML -->
+    <div class="section" id="section1">
+        <div class="toolbar" id="tb1">
+            <h2>Source HTML (Éditable)</h2>
+            <div class="button-group">
+                <button class="btn-clear" data-tooltip="Efface le code HTML ainsi que l'aperçu visuel et l'aperçu monochrome qui en dépendent." onclick="clearSourceHTML()">Vider</button>
+                <button class="btn-paste" data-tooltip="Colle le code HTML du presse-papier ici et met à jour automatiquement les deux aperçus ci-dessous." onclick="pasteToSourceHTML()">Coller</button>
+                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section1')">Plein écran</button>
+                <button data-tooltip="Copie le code HTML brut de cette zone dans le presse-papier." onclick="copySourceHTML()">Copier le code HTML</button>
+            </div>
+        </div>
+        <div class="zone-desc">Code HTML brut, modifiable directement. Sert de source : toute modification ici met automatiquement à jour l'Aperçu Visuel et l'Aperçu Monochrome ci-dessous.</div>
+        <textarea id="htmlSource" placeholder="Saisissez ou collez votre code HTML ici..."></textarea>
+    </div>
+
+    <!-- FENÊTRE 4 : Aperçu visuel éditable (WYSIWYG) -->
+    <div class="section" id="section2">
+        <div class="toolbar" id="tb2">
+            <h2>Aperçu Visuel (Éditable)</h2>
+            <div class="button-group">
+                <button class="btn-clear" data-tooltip="Efface l'aperçu visuel ainsi que le code source et l'aperçu monochrome qui lui sont liés." onclick="clearVisualHTML()">Vider</button>
+                <button class="btn-paste" data-tooltip="Colle du texte ou du HTML directement ici, sans toucher à la zone Source HTML au-dessus." onclick="pasteToVisualHTML()">Coller</button>
+                <button class="btn-cleanup" data-tooltip="Envoie le contenu actuel de cet aperçu vers l'Aperçu Monochrome ci-dessous, puis vide la zone Source HTML pour éviter toute confusion sur l'origine du contenu." onclick="processVisualToMonochrome()">Traiter → Aperçu Monochrome</button>
+                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section2')">Plein écran</button>
+                <button data-tooltip="Copie le contenu affiché ici avec sa mise en forme (gras, couleurs, etc.)." onclick="copyRichText()">Copier le texte rendu (Riche)</button>
+            </div>
+        </div>
+        <div class="zone-desc">Rendu visuel éditable du code HTML. Le taper ici met normalement à jour le code source ; utilisez « Coller » puis « Traiter → Aperçu Monochrome » pour un contenu collé indépendamment du code source.</div>
+        <div id="htmlVisual" class="wysiwyg" contenteditable="true"></div>
+    </div>
+
+    <!-- FENÊTRE 5 : Aperçu Monochrome -->
+    <div class="section" id="section3">
+        <div class="toolbar" id="tb3">
+            <h2>Aperçu Monochrome (Texte coloré entre doubles crochets)</h2>
+            <div class="button-group">
+                <button class="btn-clear" data-tooltip="Efface l'aperçu monochrome ainsi que le code source et l'aperçu visuel qui lui sont liés." onclick="clearProcessedHTML()">Vider</button>
+                <button class="btn-toggle-fs" data-tooltip="Agrandit cette zone en plein écran (ou double-tap/double-clic sur le titre)." onclick="toggleFullscreen('section3')">Plein écran</button>
+                <button data-tooltip="Copie le texte affiché ici (mise en forme neutralisée), avec le texte auparavant coloré entre doubles crochets [[ ]]." onclick="copyProcessedRichText()">Copier le texte rendu (Riche)</button>
+            </div>
+        </div>
+        <div class="zone-desc">Même contenu affiché en noir uniforme, sans gras ni italique. Le texte qui était en couleur dans la source apparaît entouré de doubles crochets [[ ]] pour rester repérable.</div>
+        <div id="htmlProcessed" class="wysiwyg wysiwyg-monochrome" contenteditable="true"></div>
+    </div>
+
+        </div>
+    </div>
+
     <div id="toast" class="toast">Action effectuée avec succès !</div>
 
     <script>
-        const VERSION = "V13";
+        const VERSION = "V14";
         document.getElementById('versionBadge').textContent = VERSION;
 
         const customSelect = document.getElementById('customSelect');
