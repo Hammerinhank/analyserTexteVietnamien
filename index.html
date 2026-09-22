@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Transformateur Couleur V11 + Analyseur HTML V13</title>
+    <title>Transformateur Couleur + Analyseur HTML</title>
     <style>
         /* ─── LAYOUT ─────────────────────────────────────────────── */
         body        { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
@@ -160,7 +160,19 @@
 </head>
 <body>
 
-<h2 style="text-align:center">Transformateur Couleur V11 + Analyseur HTML V13</h2>
+<h2 style="text-align:center">Transformateur Couleur + Analyseur HTML
+    <button type="button" id="badgeVersion" onclick="ouvrirHistoriqueVersions()" title="Historique des versions"
+      style="font-size:14px;vertical-align:middle;margin-left:8px;background:#2980b9;color:#fff;border:0;border-radius:999px;padding:5px 13px;font-weight:700;cursor:pointer;">v…</button>
+</h2>
+<div id="fondHistorique" onclick="if(event.target===this)fermerHistoriqueVersions()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;color:#222;border-radius:12px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #ddd;font-weight:700;">
+      Historique des versions <button type="button" onclick="fermerHistoriqueVersions()" style="border:0;background:#eee;border-radius:50%;width:30px;height:30px;cursor:pointer;">✕</button>
+    </div>
+    <div id="listeHistorique" style="overflow-y:auto;padding:6px 16px 14px;font-size:14px;line-height:1.5;"></div>
+  </div>
+</div>
 
 <div class="toolbar">
     <div class="toolbar-group" data-tooltip="Délimiteurs utilisés autour des mots colorés">
@@ -346,10 +358,27 @@
         }
     }
 
+    // ─── VERSION ET HISTORIQUE ─────────────────────────────────────────
+    const VERSION = "V14";
+    const HISTORIQUE_VERSIONS = [
+        { v: "V14", t: "Adresse de sauvegarde pré-remplie (dépôt Hammerinhank/SauvegardeOutilMemoEtDelimiteurs, fichier Sauvegarde.txt), toujours modifiable. Le chargement se fait sans jeton, y compris au démarrage ; le jeton ne sert plus qu'à sauvegarder. Ajout de ce badge de version et de cet historique ; le titre ne porte plus de numéro." },
+        { v: "V11 / V13", t: "Transformateur Couleur V11 et Analyseur HTML V13 : détail non consigné." }
+    ];
+    function ouvrirHistoriqueVersions() {
+        document.getElementById("listeHistorique").innerHTML = HISTORIQUE_VERSIONS.map(h =>
+            `<div style="padding:10px 0;border-bottom:1px solid #eee;"><b>${h.v}</b><br>${h.t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</div>`).join("");
+        document.getElementById("fondHistorique").style.display = "flex";
+    }
+    function fermerHistoriqueVersions() { document.getElementById("fondHistorique").style.display = "none"; }
+    document.getElementById("badgeVersion").textContent = VERSION;
+
+    // Dépôt par défaut : lisible par tous sans jeton, le jeton ne servant qu'à sauvegarder.
+    const REPO_API_URL_DEFAUT = "https://api.github.com/repos/Hammerinhank/SauvegardeOutilMemoEtDelimiteurs/contents/Sauvegarde.txt";
+
     let secrets = loadSecrets();
 
     // Ces variables sont dérivées de "secrets" et relues à chaque enregistrement/ouverture du panneau
-    let REPO_API_URL = secrets.repoApiUrl || "";
+    let REPO_API_URL = secrets.repoApiUrl || REPO_API_URL_DEFAUT;
     let GIT_TOKEN     = secrets.gitToken   || "";
     let GIST_ID       = secrets.gistId     || "";
     let GIST_FILE     = secrets.gistFile   || "extraction.txt";
@@ -357,7 +386,7 @@
 
     function openSecretsPanel() {
         secrets = loadSecrets();
-        document.getElementById('inRepoApiUrl').value = secrets.repoApiUrl || "";
+        document.getElementById('inRepoApiUrl').value = secrets.repoApiUrl || REPO_API_URL_DEFAUT;
         document.getElementById('inGitToken').value    = secrets.gitToken   || "";
         document.getElementById('inGistId').value      = secrets.gistId     || "";
         document.getElementById('inGistFile').value    = secrets.gistFile   || "extraction.txt";
@@ -388,7 +417,7 @@
 
     function saveSecrets() {
         secrets = {
-            repoApiUrl: document.getElementById('inRepoApiUrl').value.trim(),
+            repoApiUrl: document.getElementById('inRepoApiUrl').value.trim() || REPO_API_URL_DEFAUT,
             gitToken:   document.getElementById('inGitToken').value.trim(),
             gistId:     document.getElementById('inGistId').value.trim(),
             gistFile:   document.getElementById('inGistFile').value.trim() || "extraction.txt",
@@ -413,8 +442,8 @@
         if (!confirm("Effacer les identifiants enregistrés sur cet appareil ?")) return;
         localStorage.removeItem(SECRETS_STORAGE_KEY);
         secrets = {};
-        REPO_API_URL = ""; GIT_TOKEN = ""; GIST_ID = ""; GIST_FILE = "extraction.txt"; GIST_TOKEN = "";
-        document.getElementById('inRepoApiUrl').value = "";
+        REPO_API_URL = REPO_API_URL_DEFAUT; GIT_TOKEN = ""; GIST_ID = ""; GIST_FILE = "extraction.txt"; GIST_TOKEN = "";
+        document.getElementById('inRepoApiUrl').value = REPO_API_URL_DEFAUT;
         document.getElementById('inGitToken').value    = "";
         document.getElementById('inGistId').value      = "";
         document.getElementById('inGistFile').value    = "extraction.txt";
@@ -424,7 +453,9 @@
 
     function ensureRepoCredentials() {
         if (!REPO_API_URL || !GIT_TOKEN) {
-            alert("Configure d'abord l'URL de l'API et le token GitHub du dépôt (bouton 🔒 Identifiants).");
+            alert(!GIT_TOKEN
+              ? "Un token GitHub est nécessaire pour sauvegarder sur le dépôt (le chargement, lui, fonctionne sans). Ajoute-le avec le bouton 🔒 Identifiants."
+              : "Configure d'abord l'URL de l'API du dépôt (bouton 🔒 Identifiants).");
             openSecretsPanel();
             return false;
         }
@@ -1157,7 +1188,7 @@ ${text}`;
     }
 
     async function loadFromGit(autoSync = false) {
-        if (!REPO_API_URL || !GIT_TOKEN) {
+        if (!REPO_API_URL) {
             if (!autoSync) ensureRepoCredentials();
             return;
         }
@@ -1167,9 +1198,9 @@ ${text}`;
         btn.disabled   = true;
 
         try {
-            const response = await fetch(REPO_API_URL + `?t=${Date.now()}`, {
-                headers: { "Authorization": `Bearer ${GIT_TOKEN}`, "Accept": "application/vnd.github+json" }
-            });
+            const entetes = { "Accept": "application/vnd.github+json" };
+            if (GIT_TOKEN) entetes["Authorization"] = `Bearer ${GIT_TOKEN}`;   // sans token : lecture d'un dépôt public
+            const response = await fetch(REPO_API_URL + `?t=${Date.now()}`, { headers: entetes });
 
             if (response.ok) {
                 const data           = await response.json();
@@ -1334,7 +1365,7 @@ ${text}`;
     // ─── INITIALISATION ───────────────────────────────────────────────
     refreshAllCounts();
     document.addEventListener("DOMContentLoaded", () => {
-        if (REPO_API_URL && GIT_TOKEN) {
+        if (REPO_API_URL) {
             setTimeout(() => loadFromGit(true), 500);
         }
     });
